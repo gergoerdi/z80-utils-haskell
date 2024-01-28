@@ -1,0 +1,33 @@
+name: z80-utils
+version: 0.1.0
+category: Development
+license: MIT
+
+extra-source-files:
+  - README.md
+  - import/ZX0/src/*.h
+  - import/ZX0/src/*.c
+  
+dependencies:
+  - base
+  - bytestring
+  - filepath
+  - directory
+  - binary
+  - z80
+
+default-extensions:
+  - BinaryLiterals
+  - NumericUnderscores
+  - BlockArguments
+  - RecursiveDo
+  - NamedFieldPuns
+  - RecordWildCards
+  - LambdaCase
+
+library:
+  source-dirs: src
+  c-sources:
+    - import/ZX0/src/compress.c
+    - import/ZX0/src/optimize.c
+    - import/ZX0/src/memory.c
