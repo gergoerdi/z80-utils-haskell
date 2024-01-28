@@ -44,3 +44,18 @@ setMemoryBank :: Z80ASM
 setMemoryBank = do
     ld [0x03] A
     out [0x02] A
+
+pageVideo :: Z80ASM
+pageVideo = do
+    ld A 0x90
+    setMemoryBank
+
+pageRAM :: Z80ASM
+pageRAM = do
+    ld A 0xb0
+    setMemoryBank
+
+pageSys :: Z80ASM
+pageSys = do
+    ld A 0x70
+    setMemoryBank
