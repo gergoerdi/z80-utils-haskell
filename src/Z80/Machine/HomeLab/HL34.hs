@@ -10,6 +10,12 @@ videoStart = 0xf800
 rowstride :: (Num a) => a
 rowstride = 64
 
+numLines :: (Num a) => a
+numLines = 32
+
+videoSize :: Word16
+videoSize = rowstride * numLines
+
 pageIO :: Z80ASM
 pageIO = out [0xff] A
 
