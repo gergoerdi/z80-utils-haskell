@@ -5,6 +5,10 @@ import Z80.Utils
 
 import qualified Data.ByteString as BS
 import Data.List (intersperse)
+import Data.Word
+import Data.Bits
+import Control.Monad
+import Codec.Audio.Wave
 
 htp :: BS.ByteString -> [ASMBlock] -> BS.ByteString
 htp label blocks = mconcat $
@@ -31,3 +35,48 @@ htp label blocks = mconcat $
     word w = BS.pack [lo, hi]
       where
         (lo, hi) = wordBytes w
+
+renderToWav :: FilePath -> BS.ByteString -> IO ()
+renderToWav fileName htp = writeWaveFile fileName wav writeData
+  where
+    wav = Wave
+        { waveFileFormat = WaveVanilla
+        , waveSampleRate = 44_100
+        , waveSampleFormat = SampleFormatPcmInt 8
+        , waveChannelMask = speakerMono
+        , waveDataOffset = 0
+        , waveDataSize = 0
+        , waveSamplesTotal = 0
+        , waveOtherChunks = mempty
+        }
+
+    low = 0x7f
+    high = 0xf0
+
+    bitLength = 1600
+    space = bitLength - sync
+    sync = 150
+
+    writeData h = do
+        silence h 2000
+        level h sync high
+        mapM_ (writeBit h) $ concatMap bitsOf $ BS.unpack htp
+        silence h 2000
+
+    writeBit h = \case
+        True -> replicateM_ 2 $ spike h $ (space - sync) `div` 2
+        False -> spike h space
+
+    spike h lead = do
+        level h lead low
+        level h sync high
+
+    silence h len = level h len 0x7f
+
+    level h len val = replicateM_ (byteCount len) $ BS.hPut h $ BS.singleton val
+      where
+        usecSampleLength = 1_000_000 `div` waveSampleRate wav
+        byteCount usecs = fromIntegral $ usecs `div` usecSampleLength
+
+    bitsOf :: Word8 -> [Bool]
+    bitsOf byte = [testBit byte (7 - i) | i <- [0..7]]

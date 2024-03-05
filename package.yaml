@@ -15,6 +15,7 @@ dependencies:
   - directory
   - binary
   - z80
+  - wave
 
 default-extensions:
   - BinaryLiterals
