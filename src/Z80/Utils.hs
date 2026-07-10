@@ -38,6 +38,11 @@ setZ = cp A
 clearA :: Z80ASM
 clearA = Z80.xor A
 
+loopB :: Z80ASM -> Z80ASM
+loopB body = withLabel \loop -> do
+    body
+    djnz loop
+
 stringLoopB :: String -> Z80ASM -> Z80 Location
 stringLoopB s body = skippable \end -> mdo
     decLoopB (fromIntegral $ length s) body
