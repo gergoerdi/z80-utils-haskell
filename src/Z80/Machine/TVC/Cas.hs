@@ -5,6 +5,7 @@ import Z80
 import Data.Word
 import Z80.Utils
 import qualified Data.ByteString as BS
+import Data.Char (ord)
 
 cas :: ASMBlock -> BS.ByteString
 cas mainBlock = mconcat
@@ -13,6 +14,7 @@ cas mainBlock = mconcat
     , contents
     ]
   where
+    addr = asmOrg mainBlock
     contents = blocksOf $ mconcat
         [ basic
         , asmData mainBlock
@@ -39,15 +41,21 @@ cas mainBlock = mconcat
 
     padTo n bs = BS.take n $ bs <> BS.replicate n 0x00
 
-    basic = BS.pack
-        [ 0x0f
-        , 0x0a, 0x00, 0xdd, 0x20                      -- 10 PRINT
-        , 0x55, 0x53, 0x52                            -- USR
-        , 0x96, 0x36, 0x36, 0x35, 0x36, 0x95          -- (6656)
-        , 0xff                                        -- end of BASIC line
-        , 0x00                                        -- end of BASIC program
-        , 0x00
+    basic = BS.pack $ mconcat
+        [ [ 0x0f
+          , 0x0a, 0x00, 0xdd, 0x20                      -- 10 PRINT
+          , 0x55, 0x53, 0x52                            -- USR
+          ]
+        , [0x96] <> numToBasic addr  <> [0x95]          -- (addr)
+        , [ 0xff                                        -- end of BASIC line
+          , 0x00                                        -- end of BASIC program
+          , 0x00
+          ]
         ]
+
+    numToBasic :: (Show a, Num a) => a -> [Word8]
+    numToBasic = map ascii . show
+    ascii = fromIntegral . ord
 
     word w = BS.pack [lo, hi]
       where
