@@ -54,3 +54,6 @@ unlessFlag :: (Jump cc (Location -> Z80ASM)) => cc -> Z80 a -> Z80 a
 unlessFlag f body = skippable \end -> do
     jp f end :: Z80ASM
     body
+
+saveStack :: (Stack reg) => reg -> Z80 a -> Z80 a
+saveStack reg body = push reg *> body <* pop reg
