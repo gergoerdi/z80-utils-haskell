@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TypeFamilies, UndecidableSuperClasses, TypeOperators #-}
 module Z80.Utils where
 
 import Z80
@@ -54,6 +55,29 @@ unlessFlag :: (Jump cc (Location -> Z80ASM)) => cc -> Z80 a -> Z80 a
 unlessFlag f body = skippable \end -> do
     jp f end :: Z80ASM
     body
+
+class (NotCond (Not cond), Not (Not cond) ~ cond) => NotCond cond where
+    type family Not cond
+    flipCond :: cond -> Not cond
+
+instance NotCond Z where
+    type Not Z = NZ
+    flipCond Z = NZ
+
+instance NotCond NZ where
+    type Not NZ = Z
+    flipCond NZ = Z
+
+instance NotCond C where
+    type Not C = NC
+    flipCond C = NC
+
+instance NotCond NC where
+    type Not NC = C
+    flipCond NC = C
+
+whenFlag :: (NotCond cc, Jump (Not cc) (Location -> Z80ASM)) => cc -> Z80 a -> Z80 a
+whenFlag f = unlessFlag (flipCond f)
 
 saveStack :: (Stack reg) => reg -> Z80 a -> Z80 a
 saveStack reg body = push reg *> body <* pop reg
